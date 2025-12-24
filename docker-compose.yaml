@@ -81,6 +81,15 @@ services:
       SERVICES_PAYMENTS_BASEURL: http://payments-service:8080
     restart: unless-stopped
 
+  frontend:
+    image: arifruette/payments-frontend:0.0.1
+    container_name: frontend
+    depends_on: [ api-gateway ]
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+
+
 volumes:
   order_db_data:
   payments_db_data:
