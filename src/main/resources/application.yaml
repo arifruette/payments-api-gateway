@@ -1,0 +1,12 @@
+ktor:
+  deployment:
+    port: ${PORT:8080}
+  application:
+    modules:
+      - ApplicationKt.module
+
+services:
+  order:
+    baseUrl: ${SERVICES_ORDER_BASEURL:http://order-service:8080}
+  payments:
+    baseUrl: ${SERVICES_PAYMENTS_BASEURL:http://payments-service:8080}

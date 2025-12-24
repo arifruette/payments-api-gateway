@@ -1,0 +1,187 @@
+openapi: 3.0.3
+info:
+  title: API Gateway
+  version: 1.0.0
+servers:
+  - url: /
+paths:
+  /api/orders:
+    post:
+      summary: Create order
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateOrderRequest'
+      responses:
+        '202':
+          description: Accepted
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CreateOrderResponse'
+        '400':
+          description: Bad request
+        '502':
+          description: Upstream failure
+    get:
+      summary: List user orders
+      parameters:
+        - in: header
+          name: X-User-Id
+          required: false
+          schema: { type: string, format: uuid }
+        - in: query
+          name: user_id
+          required: false
+          schema: { type: string, format: uuid }
+        - in: query
+          name: limit
+          schema: { type: integer, default: 50 }
+        - in: query
+          name: offset
+          schema: { type: integer, default: 0 }
+      responses:
+        '200':
+          description: Orders
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Order' }
+        '400': { description: Bad request }
+        '502': { description: Upstream failure }
+  /api/orders/{id}:
+    get:
+      summary: Get order by id
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Order
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Order'
+        '404':
+          description: Not found
+        '502':
+          description: Upstream failure
+  /api/payments/account:
+    post:
+      summary: Create account (one per user)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateAccountRequest'
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '409':
+          description: Already exists
+        '502':
+          description: Upstream failure
+  /api/payments/topup:
+    post:
+      summary: Top up account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TopUpRequest'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '404':
+          description: Not found
+        '502':
+          description: Upstream failure
+  /api/payments/balance/{userId}:
+    get:
+      summary: Get balance
+      parameters:
+        - in: path
+          name: userId
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Balance
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Balance'
+        '404':
+          description: Not found
+        '502':
+          description: Upstream failure
+components:
+  schemas:
+    CreateAccountResponse:
+      type: object
+      required: [ created ]
+      properties:
+        created: { type: boolean }
+    CreateOrderRequest:
+      type: object
+      required: [userId, amount, description]
+      properties:
+        userId: { type: string, format: uuid }
+        amount: { type: integer, format: int64, minimum: 1 }
+        description: { type: string, minLength: 1 }
+    CreateOrderResponse:
+      type: object
+      required: [orderId, status]
+      properties:
+        orderId: { type: string, format: uuid }
+        status: { type: string }
+    Order:
+      type: object
+      required: [id, userId, amount, description, status]
+      properties:
+        id: { type: string, format: uuid }
+        userId: { type: string, format: uuid }
+        amount: { type: integer, format: int64 }
+        description: { type: string }
+        status: { type: string }
+    CreateAccountRequest:
+      type: object
+      required: [userId]
+      properties:
+        userId: { type: string, format: uuid }
+    TopUpRequest:
+      type: object
+      required: [userId, amount]
+      properties:
+        userId: { type: string, format: uuid }
+        amount: { type: integer, format: int64, minimum: 1 }
+    Account:
+      type: object
+      required: [userId]
+      properties:
+        userId: { type: string, format: uuid }
+    Balance:
+      type: object
+      required: [userId, balance]
+      properties:
+        userId: { type: string, format: uuid }
+        balance: { type: integer, format: int64 }
